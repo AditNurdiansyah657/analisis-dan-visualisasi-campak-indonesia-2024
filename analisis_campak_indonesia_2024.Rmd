@@ -1,0 +1,319 @@
+---
+title: "Analisis Cakupan Imunisasi dan Kasus Campak Menurut Provinsi di Indonesia Tahun 2024"
+author: "Adit Nurdiansyah"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+---
+
+## Install dan Load Library
+
+Beberapa library yang perlu diinstall sebagai berikut:
+
+```{r}
+## Install library jika belum tersedia (hapus tanda # untuk menginstall):
+#install.packages("ggplot2")
+#install.packages("readxl")
+#install.packages("ggthemes")
+#install.packages("gridExtra")
+#install.packages("dplyr")
+#install.packages("scales")
+#install.packages("ggpubr")
+
+## Setelah library terinstall, lalu Run Chunk
+## Kemudian hapus atau beri komentar kembali
+## Terakhir aktifkan library:
+library(ggplot2)
+library(readxl)
+library(ggthemes)
+library(gridExtra)
+library(dplyr)
+library(scales)
+library(ggpubr)
+```
+
+---
+
+## Input Data
+
+Data diinput dari Microsoft Excel dengan syntax sebagai berikut:
+
+```{r}
+# Sesuaikan path file dengan directory Anda
+setwd("C:/Adit Nurdiansyah/Kuliah/Semester/Semester 2 - Genap (2025-2026)/MK Probabilitas dan Statistika/Tugas/Kelompok/Pertemuan 3")
+data <- read_excel("data_campak_indonesia_2024.xlsx")
+
+# Bersihkan data: hapus baris kosong
+data <- data[!is.na(data$Provinsi), ]
+
+# Konversi tipe data
+data$`Cakupan MR2 %` <- as.numeric(data$`Cakupan MR2 %`)
+data$`Jumlah Kasus Campak` <- as.numeric(data$`Jumlah Kasus Campak`)
+
+# Tampilkan 6 baris pertama
+head(data)
+```
+
+```{r}
+# Tampilkan ringkasan struktur data
+str(data)
+```
+
+---
+
+## 1. Pie Chart
+
+Dari data tersebut akan disajikan visualisasi data dalam bentuk Pie Chart.
+Berikut terlampir hasil visualisasi **Distribusi Jumlah Kasus Campak Berdasarkan Wilayah**:
+
+```{r fig.width=8, fig.height=6}
+# Agregasi total kasus per wilayah
+data_wilayah <- data %>%
+  group_by(`Pulau/Wilayah`) %>%
+  summarise(Total_Kasus = sum(`Jumlah Kasus Campak`, na.rm = TRUE)) %>%
+  mutate(Persentase = round((Total_Kasus / sum(Total_Kasus)) * 100, 1))
+
+pie_chart <- ggplot(data_wilayah, aes(x = "", y = Total_Kasus, fill = `Pulau/Wilayah`)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y", start = 0) +
+  theme_minimal() +
+  labs(
+    title = "Pie Chart: Distribusi Jumlah Kasus Campak per Wilayah (2024)",
+    fill  = "Wilayah",
+    caption = "Data Source: Kementerian Kesehatan (Kemenkes) & Badan Pusat Statistik (BPS)"
+  ) +
+  geom_text(
+    aes(label = paste0(Persentase, "%")),
+    position = position_stack(vjust = 0.5),
+    size = 3.5, color = "white", fontface = "bold"
+  ) +
+  theme(
+    axis.text.x  = element_blank(),
+    axis.title   = element_blank(),
+    plot.title   = element_text(hjust = 0.5, face = "bold", size = 13),
+    plot.caption          = element_text(hjust = 1, size = 8, color = "gray40"),
+    plot.caption.position = "plot"
+  )
+
+pie_chart
+```
+
+### Interpretasi Pie Chart
+
+**Statistik Deskriptif:**
+Berdasarkan hasil Pie Chart di atas, distribusi jumlah kasus campak di Indonesia tahun 2024 menunjukkan bahwa wilayah Jawa mendominasi dengan proporsi terbesar. Hal ini dikarenakan Jawa merupakan wilayah dengan kepadatan penduduk tertinggi di Indonesia, sehingga potensi penyebaran penyakit campak lebih besar dibandingkan wilayah lain.
+
+**Statistik Inferensia:**
+Dominasi kasus di wilayah Jawa mengindikasikan adanya ketidakmerataan distribusi kasus campak antara wilayah Jawa dan luar Jawa. Secara deskriptif, temuan ini memberikan dasar untuk menyimpulkan bahwa wilayah Jawa memerlukan intervensi imunisasi yang lebih intensif dan terstruktur.
+
+---
+
+## 2. Bar Chart
+
+Dari data tersebut akan disajikan visualisasi data dalam bentuk Bar Chart.
+Berikut terlampir hasil visualisasi **Jumlah Kasus Campak per Provinsi Tahun 2024**:
+
+```{r fig.width=12, fig.height=7}
+bar_chart <- ggplot(data, aes(x = reorder(Provinsi, `Jumlah Kasus Campak`),
+                              y = `Jumlah Kasus Campak`,
+                              fill = `Pulau/Wilayah`)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title = "Bar Chart: Jumlah Kasus Campak per Provinsi (2024)",
+    x     = "Provinsi",
+    y     = "Jumlah Kasus Campak",
+    fill  = "Wilayah",
+    caption = "Data Source: Kementerian Kesehatan (Kemenkes) & Badan Pusat Statistik (BPS)"
+  ) +
+  theme(
+    plot.title  = element_text(hjust = 0.5, face = "bold", size = 13),
+    axis.text.y = element_text(size = 8),
+    plot.caption          = element_text(hjust = 1, size = 8, color = "gray40"),
+    plot.caption.position = "plot"
+  )
+
+bar_chart
+```
+
+### Interpretasi Bar Chart
+
+**Statistik Deskriptif:**
+Grafik Bar Chart menunjukkan perbandingan jumlah kasus campak di setiap provinsi pada tahun 2024. Setiap batang merepresentasikan jumlah kasus pada suatu provinsi dan diurutkan dari jumlah kasus terendah hingga tertinggi.
+
+**Statistik Inferensia:**
+Dari grafik ini dapat terlihat bahwa terdapat perbedaan jumlah kasus campak antar provinsi. Beberapa provinsi memiliki jumla jumlah kasus yang relatif tinggi dibandingkan provinsi lainnya. Hal ini dapat disebabkan oleh berbagai faktor seperti kepadatan penduduk, tingkat cakupan imunisasi, serta akses terhadap layanan kesehatan.
+
+---
+
+## 3. Histogram
+
+Dari data tersebut akan disajikan visualisasi data dalam bentuk Histogram.
+Berikut terlampir hasil visualisasi **Distribusi Frekuensi Cakupan Imunisasi MR2 (%)** pada seluruh provinsi:
+
+```{r fig.width=8, fig.height=5}
+histogram <- ggplot(data, aes(x = `Cakupan MR2 %`)) +
+  geom_histogram(binwidth = 10, fill = "#2196F3", color = "white", alpha = 0.85) +
+  theme_minimal() +
+  labs(
+    title = "Histogram: Distribusi Cakupan Imunisasi MR2 (%) per Provinsi (2024)",
+    x     = "Cakupan MR2 (%)",
+    y     = "Jumlah Provinsi",
+    caption = "Data Source: Kementerian Kesehatan (Kemenkes) & Badan Pusat Statistik (BPS)"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 13),
+    plot.caption          = element_text(hjust = 1, size = 8, color = "gray40"),
+    plot.caption.position = "plot"
+  )
+
+histogram
+```
+
+### Interpretasi Histogram
+
+**Statistik Deskriptif:**
+Dari histogram dapat dilihat bagaimana penyebaran nilai cakupan imunisasi pada berbagai provinsi. Jika sebagian besar batang histogram terkonsentrasi pada nilai tertentu, maka dapat disimpulkan bahwa banyak provinsi memiliki tingkat cakupan imunisasi yang berada pada rentang tersebut.
+
+**Statistik Inferensia:**
+Grafik ini membantu memahami apakah cakupan imunisasi antar provinsi cenderung merata atau masih terdapat perbedaan yang cukup besar. Selain itu, histogram juga dapat menunjukkan apakah terdapat provinsi dengan cakupan imunisasi yang sangat rendah atau sangat tinggi dibandingkan provinsi lainnya.
+
+---
+
+## 4. Density Plot
+
+Dari data tersebut akan disajikan visualisasi data dalam bentuk Density Plot.
+Berikut terlampir hasil visualisasi **Distribusi Kepadatan Cakupan Imunisasi MR2 (%) berdasarkan Wilayah**:
+
+```{r fig.width=9, fig.height=5}
+density_plot <- ggplot(data, aes(x = `Cakupan MR2 %`, fill = `Pulau/Wilayah`)) +
+  geom_density(alpha = 0.45) +
+  theme_minimal() +
+  labs(
+    title = "Density Plot: Distribusi Cakupan MR2 (%) per Wilayah (2024)",
+    x     = "Cakupan MR2 (%)",
+    y     = "Kepadatan (Density)",
+    fill  = "Wilayah",
+    caption = "Data Source: Kementerian Kesehatan (Kemenkes) & Badan Pusat Statistik (BPS)"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 13),
+    plot.caption          = element_text(hjust = 1, size = 8, color = "gray40"),
+    plot.caption.position = "plot"
+  )
+
+density_plot
+```
+
+### Interpretasi Density Plot
+
+**Statistik Deskriptif:**
+Grafik ini memperlihatkan bagaimana distribusi nilai cakupan imunisasi pada masing-masing wilayah. Setiap warna mewakili wilayah tertentu sehingga memudahkan untuk melihat apakah suatu wilayah memiliki tingkat cakupan imunisasi yang lebih tinggi atau lebih rendah dibanding wilayah lainnya.
+
+**Statistik Inferensia:**
+Jika kurva pada suatu wilayah berada lebih ke kanan, maka wilayah tersebut cenderung memiliki cakupan imunisasi yang lebih tinggi. Sebaliknya, jika kurva lebih ke kiri, maka cakupan imunisasi di wilayah tersebut relatif lebih rendah.
+
+---
+
+## 5. Boxplot
+
+Dari data tersebut akan disajikan visualisasi data dalam bentuk Boxplot.
+Berikut terlampir hasil visualisasi **Sebaran Jumlah Kasus Campak per Wilayah**:
+
+```{r fig.width=9, fig.height=6}
+boxplot_plot <- ggplot(data, aes(x = `Pulau/Wilayah`,
+                                  y = `Jumlah Kasus Campak`,
+                                  fill = `Pulau/Wilayah`)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red", outlier.shape = 16, outlier.size = 2) +
+  theme_minimal() +
+  labs(
+    title = "Boxplot: Sebaran Jumlah Kasus Campak per Wilayah (2024)",
+    x     = "Wilayah",
+    y     = "Jumlah Kasus Campak",
+    fill  = "Wilayah",
+    caption = "Data Source: Kementerian Kesehatan (Kemenkes) & Badan Pusat Statistik (BPS)"
+  ) +
+  theme(
+    plot.title  = element_text(hjust = 0.5, face = "bold", size = 13),
+    axis.text.x = element_text(angle = 20, hjust = 1, size = 9),
+    legend.position = "none",
+    plot.caption          = element_text(hjust = 1, size = 8, color = "gray40"),
+    plot.caption.position = "plot"
+  )
+
+boxplot_plot
+```
+
+### Interpretasi Boxplot
+
+**Statistik Deskriptif:**
+Dalam boxplot, kotak menunjukkan rentang kuartil pertama hingga kuartil ketiga, sedangkan garis di dalam kotak menunjukkan nilai median dari jumlah kasus. Titik merah menunjukkan outlier, yaitu nilai yang jauh lebih tinggi atau lebih rendah dibandingkan data lainnya.
+
+**Statistik Inferensia:**
+Dalam boxplot, kotak menunjukkan rentang kuartil pertama hingga kuartil ketiga, sedangkan garis di dalam kotak menunjukkan nilai median dari jumlah kasus. Titik merah menunjukkan outlier, yaitu nilai yang jauh lebih tinggi atau lebih rendah dibandingkan data lainnya.
+
+---
+
+## Tabel Rekapitulasi Statistik Deskriptif
+
+```{r}
+modus <- function(x){
+  frek <- table(x)
+  if(max(frek) == 1){
+    return("Tidak ada modus")
+  } else {
+    return(as.numeric(names(frek[frek == max(frek)])))
+  }
+}
+
+hasil <- data.frame(
+  Statistik    = c("Mean","Median","Modus","Minimum","Maximum",
+                   "Range","Varians","Standar Deviasi","Q1","Q3"),
+  Cakupan_MR2  = c(
+    mean(data$`Cakupan MR2 %`),
+    median(data$`Cakupan MR2 %`),
+    modus(data$`Cakupan MR2 %`),
+    min(data$`Cakupan MR2 %`),
+    max(data$`Cakupan MR2 %`),
+    diff(range(data$`Cakupan MR2 %`)),
+    var(data$`Cakupan MR2 %`),
+    sd(data$`Cakupan MR2 %`),
+    quantile(data$`Cakupan MR2 %`, 0.25),
+    quantile(data$`Cakupan MR2 %`, 0.75)
+  ),
+  Kasus_Campak = c(
+    mean(data$`Jumlah Kasus Campak`),
+    median(data$`Jumlah Kasus Campak`),
+    modus(data$`Jumlah Kasus Campak`),
+    min(data$`Jumlah Kasus Campak`),
+    max(data$`Jumlah Kasus Campak`),
+    diff(range(data$`Jumlah Kasus Campak`)),
+    var(data$`Jumlah Kasus Campak`),
+    sd(data$`Jumlah Kasus Campak`),
+    quantile(data$`Jumlah Kasus Campak`, 0.25),
+    quantile(data$`Jumlah Kasus Campak`, 0.75)
+  )
+)
+
+print(hasil)
+```
+
+---
+
+## Kesimpulan Umum
+
+Berdasarkan seluruh analisis visualisasi dan statistik deskriptif terhadap data cakupan imunisasi dan kasus campak di Indonesia tahun 2024, dapat disimpulkan sebagai berikut:
+
+1. **Pie Chart** menunjukkan bahwa wilayah Jawa mendominasi jumlah kasus campak secara nasional.
+2. **Bar Chart** menunjukkan bahwa Jawa Barat, Jawa Timur, dan Jawa Tengah merupakan tiga provinsi dengan kasus tertinggi, sedangkan Papua Barat Daya dan Bengkulu mencatat kasus terendah.
+3. **Histogram** menunjukkan bahwa sebagian besar provinsi memiliki cakupan imunisasi MR2 di bawah 80%, jauh dari target nasional ≥95%.
+4. **Density Plot** menunjukkan bahwa wilayah timur Indonesia, khususnya Maluku & Papua, memiliki cakupan imunisasi yang lebih rendah dibandingkan wilayah barat.
+5. **Boxplot** menunjukkan bahwa wilayah Jawa memiliki sebaran kasus yang jauh lebih tinggi dan bervariasi dibandingkan wilayah lain.
+
+Secara inferensial, terdapat indikasi kuat bahwa **rendahnya cakupan imunisasi berkorelasi dengan tingginya jumlah kasus campak**. Temuan ini dapat menjadi dasar rekomendasi kebijakan untuk memperkuat program imunisasi nasional, khususnya di provinsi-provinsi dengan cakupan MR2 di bawah 70%.
